@@ -9,9 +9,11 @@
         android:background="#FF6E00"
         >
         <Button
-            android:layout_width="40dp"
-            android:layout_height="30dp"
+            android:id="@+id/back_login"
+            android:layout_width="30dp"
+            android:layout_height="20dp"
             android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
             android:background="@drawable/back1"
             />
         <TextView
@@ -21,7 +23,7 @@
             android:textColor="#FFFFFF"
             android:text="邮箱注册"
             android:textSize="23sp"
-            android:layout_marginLeft="70dp"
+            android:layout_marginLeft="50dp"
             />
     </RelativeLayout>
     <RelativeLayout
@@ -71,6 +73,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_marginLeft="40dp"
+            android:inputType="textEmailAddress"
             android:hint="邮箱"
 
             />
@@ -131,6 +134,7 @@
         android:layout_marginTop="370dp"
         android:layout_marginLeft="10dp">
         <Button
+            android:id="@+id/register"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"

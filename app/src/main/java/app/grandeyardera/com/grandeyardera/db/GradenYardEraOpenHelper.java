@@ -8,21 +8,25 @@ import android.database.sqlite.SQLiteOpenHelper;
  * Created by 13118467271 on 2017/8/22.
  */
 
-public class GradnYardEraSQL extends SQLiteOpenHelper {
+public class GradenYardEraOpenHelper extends SQLiteOpenHelper {
 
 
-    public  static final String CREATE_LOGIN = "create table Login ("
+    public  static final String CREATE_USER = "create table Login ("
             + "id integer primary key autoincrement,"
-            + "login_email text,"
-            + "login_password text)";
+            + "user_name text,"
+            + "user_email text,"
+            + "user_password text,"
+            + "user_school text,"
+            + "user_number integer)"
+            ;
 
-    public GradnYardEraSQL(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
+    public GradenYardEraOpenHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
+        db.execSQL(CREATE_USER);
     }
 
     @Override

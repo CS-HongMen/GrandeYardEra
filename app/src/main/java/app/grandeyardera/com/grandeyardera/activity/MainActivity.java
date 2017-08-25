@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String provider;
     private boolean isFirstLocate = true;
     private Button scanner;
+    private Button userself;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,10 +47,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         mapView = (MapView) findViewById(R.id.map_view);
         scanner = (Button) findViewById(R.id.scan_qr_code);
+        userself = (Button) findViewById(R.id.user);
         baiduMap = mapView.getMap();
         baiduMap.setMyLocationEnabled(true);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         scanner.setOnClickListener(this);
+        userself.setOnClickListener(this);
         /**
          * 获取所有可用的位置提供器
          */
@@ -68,21 +71,73 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
         Location location = locationManager.getLastKnownLocation(provider);
-
+        /*
         LocationClientOption option = new LocationClientOption();
         option.setCoorType("bd09ll");
-
+        */
         if (location != null) {
-            BaiduUtil.navigateTo(baiduMap, location, isFirstLocate);
+            //BaiduUtil.navigateTo(baiduMap, location, isFirstLocate);
+            navigateTo(location);
         }
         locationManager.requestLocationUpdates(provider, 5000, 1, locationListener);
+    }
+    private void navigateTo(Location location) {
+
+        if(isFirstLocate){
+            LocationClientOption option = new LocationClientOption();
+
+            option.setCoorType("bd09ll");
+            LatLng ll = new LatLng(location.getLatitude(),location.getLongitude());
+            MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(ll);
+            baiduMap.animateMapStatus(update);
+            //做缩放级别的调整，3f到19f，返回一个MapStatusUpdate对象
+            update = MapStatusUpdateFactory.zoomTo(16f);
+            baiduMap.animateMapStatus(update);
+            isFirstLocate = false;
+
+        }
+
+        //显示当前的小光标
+        MyLocationData.Builder locationBuilder = new MyLocationData.Builder();
+        locationBuilder.latitude(location.getLatitude());
+        locationBuilder.longitude(location.getLongitude());
+        MyLocationData locationData = locationBuilder.build();
+        baiduMap.setMyLocationData(locationData);
     }
 
     /**
      * 监听位置移动，实时改变位置
      */
-    LocationListener locationListener = BaiduUtil.getLocationListener(baiduMap, isFirstLocate);
+    //LocationListener locationListener = BaiduUtil.getLocationListener(baiduMap, isFirstLocate);
+    LocationListener locationListener = new LocationListener(){
 
+        @Override
+        public void onLocationChanged(Location location) {
+
+            if(location != null){
+                navigateTo(location);
+            }
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+
+        }
+
+    };
     protected void onDestroy() {
         super.onDestroy();
         baiduMap.setMyLocationEnabled(false);
@@ -108,6 +163,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.scan_qr_code:
                 Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
                 startActivityForResult(intent, REQUEST_CODE);
+                break;
+            case R.id.user:
+                Intent intentMainToUser = new Intent(MainActivity.this,UserInfoActivity.class);
+                startActivity(intentMainToUser);
+                finish();
+                break;
+            default:
                 break;
         }
     }
