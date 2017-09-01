@@ -3,6 +3,8 @@ package app.grandeyardera.com.grandeyardera.util;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.google.gson.Gson;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -151,4 +153,5 @@ public class NetUtil {
         return bytes;
 
     }
+
 }

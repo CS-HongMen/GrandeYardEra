@@ -31,7 +31,6 @@
         android:layout_height="80dp"
         android:layout_marginTop="50dp"
         android:layout_marginLeft="10dp">
-
         <ImageView
             android:layout_width="30dp"
             android:layout_height="30dp"
@@ -50,15 +49,12 @@
             android:hint="用户名"
 
             />
-
     </RelativeLayout>
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:layout_marginTop="130dp"
+        android:layout_marginTop="100dp"
         android:layout_marginLeft="10dp">
-
         <ImageView
             android:layout_width="30dp"
             android:layout_height="30dp"
@@ -81,7 +77,54 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:layout_marginTop="210dp"
+        android:layout_marginTop="150dp"
+        android:layout_marginLeft="10dp">
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/school"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="10dp"
+            />
+        <EditText
+            android:id="@+id/school"
+            android:layout_width="320dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="40dp"
+            android:inputType="textEmailAddress"
+            android:hint="学校"
+            />
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginTop="200dp"
+        android:layout_marginLeft="10dp">
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/number"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="10dp"
+            />
+        <EditText
+            android:id="@+id/number"
+            android:layout_width="320dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="40dp"
+            android:inputType="textEmailAddress"
+            android:hint="学号"
+            />
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginTop="250dp"
         android:layout_marginLeft="10dp">
 
         <ImageView
@@ -106,7 +149,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:layout_marginTop="290dp"
+        android:layout_marginTop="300dp"
         android:layout_marginLeft="10dp">
 
         <ImageView

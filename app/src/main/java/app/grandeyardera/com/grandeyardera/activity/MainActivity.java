@@ -1,39 +1,34 @@
 package app.grandeyardera.com.grandeyardera.activity;
 
-import android.Manifest;
-import android.content.Context;
+
+
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationListener;
+
 import android.location.LocationManager;
-import android.support.v4.app.ActivityCompat;
+
+import com.amap.api.maps2d.MapView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.baidu.location.LocationClientOption;
-import com.baidu.mapapi.SDKInitializer;
-import com.baidu.mapapi.map.BaiduMap;
-import com.baidu.mapapi.map.MapStatusUpdate;
-import com.baidu.mapapi.map.MapStatusUpdateFactory;
-import com.baidu.mapapi.map.MapView;
-import com.baidu.mapapi.map.MyLocationData;
-import com.baidu.mapapi.model.LatLng;
+import com.amap.api.maps2d.AMap;
+
 import com.uuzuche.lib_zxing.activity.CaptureActivity;
 import com.uuzuche.lib_zxing.activity.CodeUtils;
 
-import java.util.List;
+
 
 import app.grandeyardera.com.grandeyardera.R;
-import app.grandeyardera.com.grandeyardera.util.BaiduUtil;
+
+import app.grandeyardera.com.grandeyardera.util.MapUtil;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final int REQUEST_CODE = 1;
     private MapView mapView;
-    private BaiduMap baiduMap;
+    AMap aMap;
+    MapUtil mapUtil;
     private LocationManager locationManager;
     private String provider;
     private boolean isFirstLocate = true;
@@ -43,44 +38,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SDKInitializer.initialize(getApplicationContext());
+       // SDKInitializer.initialize(getApplicationContext());
         setContentView(R.layout.activity_main);
         mapView = (MapView) findViewById(R.id.map_view);
         scanner = (Button) findViewById(R.id.scan_qr_code);
         userself = (Button) findViewById(R.id.user);
-        baiduMap = mapView.getMap();
-        baiduMap.setMyLocationEnabled(true);
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        aMap = mapView.getMap();
+        mapUtil = new MapUtil(mapView,MainActivity.this,savedInstanceState);
+
+
         scanner.setOnClickListener(this);
         userself.setOnClickListener(this);
+    }
         /**
          * 获取所有可用的位置提供器
          */
-        List<String> providerList = locationManager.getProviders(true);
-        if (providerList.contains(LocationManager.GPS_PROVIDER)) {
-            provider = LocationManager.GPS_PROVIDER;
-        } else if (providerList.contains(LocationManager.NETWORK_PROVIDER)) {
-            provider = LocationManager.NETWORK_PROVIDER;
-        } else {
-            //没有相应的位置提供器就弹出提示信息
-            Toast.makeText(this, "请打开GPS", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            return;
-        }
-        Location location = locationManager.getLastKnownLocation(provider);
-        /*
-        LocationClientOption option = new LocationClientOption();
-        option.setCoorType("bd09ll");
-        */
-        if (location != null) {
-            //BaiduUtil.navigateTo(baiduMap, location, isFirstLocate);
-            navigateTo(location);
-        }
-        locationManager.requestLocationUpdates(provider, 5000, 1, locationListener);
-    }
+    /*
     private void navigateTo(Location location) {
 
         if(isFirstLocate){
@@ -104,11 +78,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MyLocationData locationData = locationBuilder.build();
         baiduMap.setMyLocationData(locationData);
     }
-
+    */
     /**
      * 监听位置移动，实时改变位置
      */
     //LocationListener locationListener = BaiduUtil.getLocationListener(baiduMap, isFirstLocate);
+    /*
     LocationListener locationListener = new LocationListener(){
 
         @Override
@@ -138,23 +113,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
     };
-    protected void onDestroy() {
-        super.onDestroy();
-        baiduMap.setMyLocationEnabled(false);
-        mapView.onDestroy();
-        if (locationManager != null) {
-            locationManager.removeUpdates(locationListener);
-        }
-    }
+       */
 
     protected void onPause() {
         super.onPause();
-        mapView.onPause();
+        mapUtil.getMapView().onPause();
     }
 
     protected void onResume() {
         super.onResume();
-        mapView.onResume();
+        mapUtil.getMapView().onResume();
+    }
+
+    protected void onDestroy() {
+        super.onDestroy();
+        mapUtil.getMapView().onDestroy();
+        if(null != mapUtil.getmLocationClient()){
+            mapUtil.getmLocationClient().stopLocation();
+            mapUtil.getmLocationClient().onDestroy();
+        }
+
     }
 
     @Override

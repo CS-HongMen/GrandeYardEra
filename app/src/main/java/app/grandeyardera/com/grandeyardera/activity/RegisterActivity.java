@@ -14,6 +14,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import java.net.HttpURLConnection;
 
 import app.grandeyardera.com.grandeyardera.R;
@@ -28,6 +30,8 @@ public class RegisterActivity extends Activity implements View.OnClickListener {
     private EditText eMail;
     private EditText password;
     private EditText passwordAgain;
+    private EditText school;
+    private EditText number;
     private Button back;
     private Button register;
     private String result;
@@ -59,7 +63,8 @@ public class RegisterActivity extends Activity implements View.OnClickListener {
         passwordAgain = (EditText)findViewById(R.id.register_password_again);
         back = (Button)findViewById(R.id.back_login);
         register = (Button)findViewById(R.id.register);
-
+        school = (EditText) findViewById(R.id.school);
+        number = (EditText)findViewById(R.id.number);
         back.setOnClickListener(this);
         register.setOnClickListener(this);
     }
@@ -72,7 +77,9 @@ public class RegisterActivity extends Activity implements View.OnClickListener {
                 String emailText = eMail.getText().toString();
                 String passwordText = password.getText().toString();
                 String passwordAgainText = passwordAgain.getText().toString();
-                if ("".equals(userNameText) || "".equals(emailText) || "".equals(passwordText) || "".equals(passwordAgainText)){
+                String schoolText = school.getText().toString();
+                String numberText = number.getText().toString();
+                if ("".equals(userNameText) || "".equals(schoolText) ||"".equals(numberText) || "".equals(emailText) || "".equals(passwordText) || "".equals(passwordAgainText)){
                     Toast.makeText(this,"请完整填入以上的信息",Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -89,6 +96,8 @@ public class RegisterActivity extends Activity implements View.OnClickListener {
                 break;
             case R.id.back_login:
                 Intent intentLoginActivity = new Intent(RegisterActivity.this,LoginActivity.class);
+                intentLoginActivity.putExtra("userEmail", eMail.getText().toString());
+                intentLoginActivity.putExtra("login_from_register",true);
                 startActivity(intentLoginActivity);
                 finish();
                 break;
@@ -110,4 +119,5 @@ public class RegisterActivity extends Activity implements View.OnClickListener {
             }
         }).start();
     }
+
 }

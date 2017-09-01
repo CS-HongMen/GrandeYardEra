@@ -33,20 +33,29 @@
         android:theme="@style/AppTheme"
         android:name=".MyApplication">
 
-        <meta-data
-            android:name="com.baidu.lbsapi.API_KEY"
-            android:value="BaxawaSe6oA5NXSIt4tugOmydqaU4EFS"
+        <meta-data android:name="com.amap.api.v2.apikey"
+            android:value="8ba73fa8aa8b4fb276b8d62217076074"
             />
-        <activity android:name=".activity.WelcomeActivity">
+        <service android:name="com.amap.api.location.APSService"/>
+        <provider
+            android:authorities="app.grandeyardera.com.grandeyardera.fileprovider"
+            android:name="android.support.v4.content.FileProvider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
+                </provider>
+        <activity android:name=".activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".activity.WelcomeActivity"/>
         <activity android:name=".activity.LoginActivity"/>
         <activity android:name=".activity.RegisterActivity"/>
-        <activity android:name=".activity.MainActivity"/>
+
         <activity android:name=".activity.FindPasswordActivity"/>
         <activity android:name=".activity.UserInfoActivity"/>
     </application>

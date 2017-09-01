@@ -1,62 +1,105 @@
 package app.grandeyardera.com.grandeyardera.activity;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.PersistableBundle;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.content.FileProvider;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import app.grandeyardera.com.grandeyardera.BuildConfig;
 import app.grandeyardera.com.grandeyardera.R;
+import app.grandeyardera.com.grandeyardera.model.GradenYardEraDB;
+import app.grandeyardera.com.grandeyardera.model.User;
+import app.grandeyardera.com.grandeyardera.util.FileStorage;
+import app.grandeyardera.com.grandeyardera.util.PermissionsActivity;
+import app.grandeyardera.com.grandeyardera.util.PermissionsChecker;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by 13118467271 on 2017/8/24.
  */
 
 public class UserInfoActivity extends Activity implements View.OnClickListener {
-    final Context context = this;
+    //final Context context = this;
+    private static final int REQUEST_PICK_IMAGE = 1; //相册选取
+    private static final int REQUEST_CAPTURE = 2;  //拍照
+    private static final int REQUEST_PICTURE_CUT = 3;  //剪裁图片
+    private static final int REQUEST_PERMISSION = 4;  //权限请求
+    private PermissionsChecker mPermissionsChecker; // 权限检测器
+    static final String[] PERMISSIONS = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.CAMERA};
+    private Uri imageUri;//原图保存地址
+    private boolean isClickCamera;
+    private String imagePath;
+
     private ImageView headPortrait;
     private Button changeHeadPortrait;
     private Button userBackMain;
+    private Button logOut;
 
     private TextView userInfoName;
     private TextView userInfoSchool;
     private TextView userInfoEamil;
     private TextView userInfoNumber;
 
-    private Uri imageUri;
+   // private Uri imageUri;
     public static final int TAKE_PHOTO = 1;
     public  static final int CROP_PHOTO = 2;
     private AlertDialog dialog = null;
-    File outputImage = null;
+    private GradenYardEraDB gradenYardEraDB;
+
+
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
-        super.onCreate(savedInstanceState, persistentState);
+    public void onCreate( Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.userinfo);
         headPortrait = (ImageView) findViewById(R.id.head_portrait);
         changeHeadPortrait = (Button) findViewById(R.id.change_head_portrait);
         userBackMain = (Button) findViewById(R.id.user_info_back);
+        logOut = (Button)findViewById(R.id.log_out);
         //compileUser = (Button) findViewById(R.id.compile);
         userInfoName = (TextView) findViewById(R.id.user_info_name);
         userInfoEamil = (TextView) findViewById(R.id.user_info_email);
         userInfoSchool = (TextView) findViewById(R.id.user_info_school);
         userInfoNumber = (TextView)findViewById(R.id.user_info_number);
+/**
+        gradenYardEraDB = new GradenYardEraDB(this);
+        String[] userMessage = new String[5];
+        userMessage = gradenYardEraDB.loadAllUser();
+        userInfoName.setText(userMessage[0]);
+        userInfoSchool.setText(userMessage[4]);
+        userInfoEamil.setText(userMessage[1]);
+        userInfoNumber.setText(userMessage[3]);
         Bitmap bt = BitmapFactory.decodeFile("head.jpg");// 从SD卡中找头像，转换成Bitmap
         if (bt != null) {
             @SuppressWarnings("deprecation")
@@ -67,9 +110,12 @@ public class UserInfoActivity extends Activity implements View.OnClickListener {
              * 如果SD里面没有则需要从服务器取头像，取回来的头像再保存在SD中
              *
              */
-        }
+
+
         changeHeadPortrait.setOnClickListener(this);
         userBackMain.setOnClickListener(this);
+        logOut.setOnClickListener(this);
+        mPermissionsChecker = new PermissionsChecker(this);
        // compileUser.setOnClickListener(this);
     }
 
@@ -85,110 +131,184 @@ public class UserInfoActivity extends Activity implements View.OnClickListener {
                 startActivity(intentUserToMain);
                 finish();
                 break;
-            case R.id.take_photo:
-                dialog.dismiss();
-                 outputImage = new File(Environment.getExternalStorageDirectory(),"head.jpg");
-                if (outputImage.exists()){
-                    outputImage.delete();
-                }
-                try {
-                    outputImage.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                imageUri = Uri.fromFile(outputImage);
-                Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
-                intent.putExtra(MediaStore.EXTRA_OUTPUT,imageUri);
-                startActivityForResult(intent,TAKE_PHOTO);
+            case R.id.log_out:
+               // gradenYardEraDB.clearPassword("");
+                Intent userIntentLogin = new Intent(UserInfoActivity.this,LoginActivity.class);
+                startActivity(userIntentLogin);
+                finish();
                 break;
-            case R.id.chose_photo:
-                dialog.dismiss();
-                outputImage = new File(Environment. getExternalStorageDirectory(), "head.jpg");
-                try {
-                    if (outputImage.exists()) {
-                        outputImage.delete();
-                    }
-                    outputImage.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                imageUri = Uri.fromFile(outputImage);
-                Intent intentChose = new Intent("android.intent.action. GET_CONTENT");
-                intentChose.setType("image/*");
-                intentChose.putExtra("crop", true);
-                intentChose.putExtra("scale", true);
-                intentChose.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-                startActivityForResult(intentChose, CROP_PHOTO);
-                break;
-               default:
+            default:
                  break;
         }
     }
-    public void popupChose(){
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        builder.setView(inflater.inflate(R.layout.dialog_chose_photo,null));
-        TextView takePhoto = (TextView) findViewById(R.id.take_photo);
-        TextView chosePhoto = (TextView) findViewById(R.id.chose_photo);
-        takePhoto.setOnClickListener(this);
-        chosePhoto.setOnClickListener(this);
-        dialog = builder.create();
-        builder.show();
-    }
-    /**
-    private void showTypeDialog() {
+    public void popupChose(){
+        final String[] items = new String[]{"从本地选择","拍照"};
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        final AlertDialog dialog = builder.create();
-        View view = View.inflate(this, R.layout.dialog_select_photo, null);
-        TextView tv_select_gallery = (TextView) view.findViewById(R.id.tv_select_gallery);
-        TextView tv_select_camera = (TextView) view.findViewById(R.id.tv_select_camera);
-        tv_select_gallery.setOnClickListener(new View.OnClickListener() {// 在相册中选取
+        builder.setTitle("选择照片").setItems(items, new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                Intent intent1 = new Intent(Intent.ACTION_PICK, null);
-                intent1.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
-                startActivityForResult(intent1, 1);
-                dialog.dismiss();
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which){
+                    case 0:
+
+                        //检查权限(6.0以上做权限判断)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            if (mPermissionsChecker.lacksPermissions(PERMISSIONS)) {
+                                startPermissionsActivity();
+                            } else {
+                                openCamera();
+                            }
+                        } else {
+                            openCamera();
+                        }
+                        isClickCamera = true;
+
+                        break;
+                    case 1:
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            if (mPermissionsChecker.lacksPermissions(PERMISSIONS)) {
+                                startPermissionsActivity();
+                            } else {
+                                selectFromAlbum();
+                            }
+                        } else {
+                            selectFromAlbum();
+                        }
+                        isClickCamera = false;
+
+                        break;
+                    default:
+                        break;
+                }
             }
         });
-        tv_select_camera.setOnClickListener(new View.OnClickListener() {// 调用照相机
-            @Override
-            public void onClick(View v) {
-                Intent intent2 = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                intent2.putExtra(MediaStore.EXTRA_OUTPUT,
-                        Uri.fromFile(new File(Environment.getExternalStorageDirectory(), "head.jpg")));
-                startActivityForResult(intent2, 2);// 采用ForResult打开
-                dialog.dismiss();
-            }
-        });
-        dialog.setView(view);
-        dialog.show();
+        builder.create().show();
     }
-    */
-    protected void onActivityResult(int requestCode,int resultCode,Intent data){
-        switch (requestCode){
-            case TAKE_PHOTO:
-                if (resultCode == RESULT_OK){
-                    Intent intent = new Intent("com.android.camera.action.CROP");
-                    intent.setDataAndType(imageUri,"image/*");
-                    intent.putExtra("scale",true);
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT,imageUri);
-                    startActivityForResult(intent,CROP_PHOTO);
+    private void openCamera() {
+        File file = new FileStorage().createIconFile();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            imageUri = FileProvider.getUriForFile(UserInfoActivity.this, "app.grandeyardera.com.grandeyardera.fileprovider", file);//通过FileProvider创建一个content类型的Uri
+        } else {
+            imageUri = Uri.fromFile(file);
+        }
+        Intent intent = new Intent();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); //添加这一句表示对目标应用临时授权该Uri所代表的文件
+        }
+        intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);//设置Action为拍照
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);//将拍取的照片保存到指定URI
+        startActivityForResult(intent, REQUEST_CAPTURE);
+    }
+    private void selectFromAlbum() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
+        startActivityForResult(intent, REQUEST_PICK_IMAGE);
+    }
+    private void cropPhoto() {
+        File file = new FileStorage().createCropFile();
+        Uri outputUri = Uri.fromFile(file);//缩略图保存地址
+        Intent intent = new Intent("com.android.camera.action.CROP");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+        intent.setDataAndType(imageUri, "image/*");
+        intent.putExtra("crop", "true");
+        intent.putExtra("aspectX", 1);
+        intent.putExtra("aspectY", 1);
+        intent.putExtra("scale", true);
+        intent.putExtra("return-data", false);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, outputUri);
+        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+        intent.putExtra("noFaceDetection", true);
+        startActivityForResult(intent, REQUEST_PICTURE_CUT);
+    }
+    private void startPermissionsActivity() {
+        PermissionsActivity.startActivityForResult(this, REQUEST_PERMISSION,
+                PERMISSIONS);
+    }
+    @TargetApi(19)
+    private void handleImageOnKitKat(Intent data) {
+        imagePath = null;
+        imageUri = data.getData();
+        if (DocumentsContract.isDocumentUri(this, imageUri)) {
+            //如果是document类型的uri,则通过document id处理
+            String docId = DocumentsContract.getDocumentId(imageUri);
+            if ("com.android.providers.media.documents".equals(imageUri.getAuthority())) {
+                String id = docId.split(":")[1];//解析出数字格式的id
+                String selection = MediaStore.Images.Media._ID + "=" + id;
+                imagePath = getImagePath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, selection);
+            } else if ("com.android.downloads.documents".equals(imageUri.getAuthority())) {
+                Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(docId));
+                imagePath = getImagePath(contentUri, null);
+            }
+        } else if ("content".equalsIgnoreCase(imageUri.getScheme())) {
+            //如果是content类型的Uri，则使用普通方式处理
+            imagePath = getImagePath(imageUri, null);
+        } else if ("file".equalsIgnoreCase(imageUri.getScheme())) {
+            //如果是file类型的Uri,直接获取图片路径即可
+            imagePath = imageUri.getPath();
+        }
+
+        cropPhoto();
+    }
+    private void handleImageBeforeKitKat(Intent intent) {
+        imageUri = intent.getData();
+        imagePath = getImagePath(imageUri, null);
+        cropPhoto();
+    }
+    private String getImagePath(Uri uri, String selection) {
+        String path = null;
+        //通过Uri和selection老获取真实的图片路径
+        Cursor cursor = getContentResolver().query(uri, null, selection, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+            }
+            cursor.close();
+        }
+        return path;
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_PICK_IMAGE://从相册选择
+                if (Build.VERSION.SDK_INT >= 19) {
+                    handleImageOnKitKat(data);
+                } else {
+                    handleImageBeforeKitKat(data);
                 }
                 break;
-            case CROP_PHOTO:
-                if (resultCode == RESULT_OK){
-                    try {
-                        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
-                        headPortrait.setImageBitmap(bitmap);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+            case REQUEST_CAPTURE://拍照
+                if (resultCode == RESULT_OK) {
+                    cropPhoto();
+                }
+                break;
+            case REQUEST_PICTURE_CUT://裁剪完成
+                Bitmap bitmap = null;
+                try {
+                    if (isClickCamera) {
+
+                        bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                    } else {
+                        bitmap = BitmapFactory.decodeFile(imagePath);
+                    }
+                    headPortrait.setImageBitmap(bitmap);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+            case REQUEST_PERMISSION://权限请求
+                if (resultCode == PermissionsActivity.PERMISSIONS_DENIED) {
+                    finish();
+                } else {
+                    if (isClickCamera) {
+                        openCamera();
+                    } else {
+                        selectFromAlbum();
                     }
                 }
                 break;
-            default:
-                break;
         }
     }
+
 }

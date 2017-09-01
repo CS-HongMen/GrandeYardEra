@@ -3,6 +3,7 @@ package app.grandeyardera.com.grandeyardera.activity;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -16,7 +17,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.baidu.mapapi.http.HttpClient;
+
+import com.google.gson.Gson;
 
 import org.apache.http.impl.client.DefaultHttpClient;
 
@@ -31,6 +33,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 import app.grandeyardera.com.grandeyardera.R;
+import app.grandeyardera.com.grandeyardera.model.User;
 import app.grandeyardera.com.grandeyardera.util.NetUtil;
 
 /**
@@ -49,7 +52,9 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     private Button intentRegister;
     private ProgressDialog progressDialog;
     private String result = null;
+    private User user;
     private  boolean FLAG = false;
+    private boolean isLoginFromResgister;
     private Handler handler = new Handler(){
       public void handleMessage(Message msg){
           if (msg.what == 0){
@@ -96,11 +101,19 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         closeLogin = (Button) findViewById(R.id.close_login);
         intentRegister = (Button) findViewById(R.id.intent_register);
         loginMail.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        isLoginFromResgister = getIntent().getBooleanExtra("login_from_register",false);
+        SharedPreferences pref = getSharedPreferences("data",MODE_PRIVATE);
+        if (isLoginFromResgister) {
+            String userEmail = getIntent().getStringExtra("userEmail");
+            loginMail.setText(userEmail);
+        }else if (pref != null){
+            String userEmail = pref.getString("email","");
+            loginMail.setText(userEmail);
+        }
         intentRegister.setOnClickListener(this);
         login.setOnClickListener(this);
         closeLogin.setOnClickListener(this);
         findPassword.setOnClickListener(this);
-
     }
 
     @Override
@@ -149,6 +162,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                 String request = "user_email=" + email + "&user_password=" + password;
                 NetUtil netUtil = new NetUtil();
                 result = netUtil.upInfo(url, "", request, "utf-8");
+                parseJSONWithGSON(result);
                 Message message = new Message();
                 message.what = 0;
                 handler.sendMessage(message);
@@ -158,5 +172,17 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         }).start();
 
 
+    }
+
+    public void parseJSONWithGSON(String jsonData){
+        Gson gson = new Gson();
+        User user = gson.fromJson(jsonData,User.class);
+        SharedPreferences.Editor editor = getSharedPreferences("data",MODE_PRIVATE).edit();
+        editor.putString("name",user.getUserName());
+        editor.putString("school",user.getUserSchool());
+        editor.putString("number",user.getUserNumber());
+        editor.putString("password",user.getUserPassword());
+        editor.putString("email",user.getUserEmail());
+        editor.commit();
     }
 }

@@ -17,7 +17,8 @@
         android:layout_weight="9"
         >
 
-        <com.baidu.mapapi.map.MapView
+        <com.amap.api.maps2d.MapView
+            xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/map_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -9,16 +9,23 @@ import android.os.Message;
 //import android.support.annotation.Nullable;
 
 import app.grandeyardera.com.grandeyardera.R;
-
+import app.grandeyardera.com.grandeyardera.model.GradenYardEraDB;
 
 
 public class WelcomeActivity extends Activity {
+    private GradenYardEraDB gradenYardEraDB;
+    private String[] emailPassword = new String[2];
+
     private Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
        // String response = (String) msg.obj;
             if (msg.arg1 == 0){
                 Intent intent = new Intent(WelcomeActivity.this, LoginActivity.class);
+                startActivity(intent);
+                WelcomeActivity.this.finish();
+            }else if (msg.arg1 == 1){
+                Intent intent = new Intent(WelcomeActivity.this, MainActivity.class);
                 startActivity(intent);
                 WelcomeActivity.this.finish();
             }
@@ -35,7 +42,12 @@ public class WelcomeActivity extends Activity {
                 try {
                     Thread.sleep(3000);
                     Message msg = new Message();
+                    emailPassword = gradenYardEraDB.loadEmailPassword();
+                    if (emailPassword[0] == null || emailPassword[1] == null){
                     msg.arg1 = 0;
+                    }else{
+                        msg.arg1 = 1;
+                    }
                     handler.sendMessage(msg);
                 } catch (InterruptedException e) {
                     e.printStackTrace();

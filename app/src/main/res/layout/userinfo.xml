@@ -20,23 +20,32 @@
                 android:layout_marginLeft="10dp"
                 android:background="@drawable/back1"
                 />
+            <Button
+                android:id="@+id/log_out"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:background="#00000000"
+                android:text="退出登录"
+                android:textColor="#ffffff"
 
+                />
         </RelativeLayout>
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="130dp">
-            <ImageView
+             <app.grandeyardera.com.grandeyardera.customControl.RoundImageView
                 android:id="@+id/head_portrait"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:background="@drawable/logo"
+                android:src="@drawable/logo"
                 android:layout_marginLeft="30dp"
                 android:layout_marginTop="50dp"
                 />
             <Button
                 android:id="@+id/change_head_portrait"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentBottom="true"
                 android:layout_marginRight="10dp"
