@@ -33,6 +33,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 import app.grandeyardera.com.grandeyardera.R;
+import app.grandeyardera.com.grandeyardera.db.GradenYardEraOpenHelper;
+import app.grandeyardera.com.grandeyardera.model.GradenYardEraDB;
 import app.grandeyardera.com.grandeyardera.model.User;
 import app.grandeyardera.com.grandeyardera.util.NetUtil;
 
@@ -47,13 +49,15 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     private EditText loginPassword;
     private Button login;
     private Button findPassword;
+    private GradenYardEraDB gradenYardEraDB;
+    public  GradenYardEraOpenHelper gradenYardEraOpenHelper = new GradenYardEraOpenHelper(this,"User.db",null,1);
 
     private Button closeLogin;
     private Button intentRegister;
     private ProgressDialog progressDialog;
     private String result = null;
     private User user;
-    private  boolean FLAG = false;
+    private boolean FLAG = false;
     private boolean isLoginFromResgister;
     private Handler handler = new Handler(){
       public void handleMessage(Message msg){
@@ -176,7 +180,8 @@ public class LoginActivity extends Activity implements View.OnClickListener {
 
     public void parseJSONWithGSON(String jsonData){
         Gson gson = new Gson();
-        User user = gson.fromJson(jsonData,User.class);
+        user = gson.fromJson(jsonData,User.class);
+
         SharedPreferences.Editor editor = getSharedPreferences("data",MODE_PRIVATE).edit();
         editor.putString("name",user.getUserName());
         editor.putString("school",user.getUserSchool());

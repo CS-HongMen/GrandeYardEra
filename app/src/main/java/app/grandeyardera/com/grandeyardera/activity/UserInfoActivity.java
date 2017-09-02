@@ -8,6 +8,7 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -22,6 +23,7 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,6 +32,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -69,8 +73,13 @@ public class UserInfoActivity extends Activity implements View.OnClickListener {
 
     private TextView userInfoName;
     private TextView userInfoSchool;
-    private TextView userInfoEamil;
+    private TextView userInfoEmail;
     private TextView userInfoNumber;
+
+    private String userInfoNameText;
+    private String userInfoSchoolText;
+    private String userInfoEmailText;
+    private String userInfoNumberText;
 
    // private Uri imageUri;
     public static final int TAKE_PHOTO = 1;
@@ -89,9 +98,26 @@ public class UserInfoActivity extends Activity implements View.OnClickListener {
         logOut = (Button)findViewById(R.id.log_out);
         //compileUser = (Button) findViewById(R.id.compile);
         userInfoName = (TextView) findViewById(R.id.user_info_name);
-        userInfoEamil = (TextView) findViewById(R.id.user_info_email);
+        userInfoEmail = (TextView) findViewById(R.id.user_info_email);
         userInfoSchool = (TextView) findViewById(R.id.user_info_school);
         userInfoNumber = (TextView)findViewById(R.id.user_info_number);
+        SharedPreferences pref = getSharedPreferences("data",MODE_PRIVATE);
+        if (pref != null) {
+            userInfoEmailText = pref.getString("email","");
+            userInfoNameText = pref.getString("name","");
+            userInfoNumberText = pref.getString("number","");
+            userInfoSchoolText = pref.getString("school","");
+            userInfoEmail.setText(userInfoEmailText);
+            userInfoName.setText(userInfoNameText);
+            userInfoSchool.setText(userInfoSchoolText);
+            userInfoNumber.setText(userInfoNumberText);
+        }
+        if (getBitmapFromSharedPreferences() != null){
+            headPortrait .setImageBitmap(getBitmapFromSharedPreferences());
+        }
+
+
+
 /**
         gradenYardEraDB = new GradenYardEraDB(this);
         String[] userMessage = new String[5];
@@ -133,6 +159,10 @@ public class UserInfoActivity extends Activity implements View.OnClickListener {
                 break;
             case R.id.log_out:
                // gradenYardEraDB.clearPassword("");
+                SharedPreferences pref = getSharedPreferences("data",MODE_PRIVATE);
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putString("password","");
+                editor.commit();
                 Intent userIntentLogin = new Intent(UserInfoActivity.this,LoginActivity.class);
                 startActivity(userIntentLogin);
                 finish();
@@ -289,6 +319,7 @@ public class UserInfoActivity extends Activity implements View.OnClickListener {
                     if (isClickCamera) {
 
                         bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                        saveBitmapToSharedPreferences(bitmap);
                     } else {
                         bitmap = BitmapFactory.decodeFile(imagePath);
                     }
@@ -309,6 +340,31 @@ public class UserInfoActivity extends Activity implements View.OnClickListener {
                 }
                 break;
         }
+    }
+    private void saveBitmapToSharedPreferences(Bitmap bitmapImage){
+        Bitmap bitmap= bitmapImage;
+        //第一步:将Bitmap压缩至字节数组输出流ByteArrayOutputStream
+        ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 80, byteArrayOutputStream);
+        //第二步:利用Base64将字节数组输出流中的数据转换成字符串String
+        byte[] byteArray=byteArrayOutputStream.toByteArray();
+        String imageString=new String(Base64.encodeToString(byteArray, Base64.DEFAULT));
+        //第三步:将String保持至SharedPreferences
+        SharedPreferences sharedPreferences=getSharedPreferences("data", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor=sharedPreferences.edit();
+        editor.putString("image", imageString);
+        editor.commit();
+    }
+    private Bitmap getBitmapFromSharedPreferences(){
+        SharedPreferences sharedPreferences=getSharedPreferences("testSP", Context.MODE_PRIVATE);
+        //第一步:取出字符串形式的Bitmap
+        String imageString=sharedPreferences.getString("image", "");
+        //第二步:利用Base64将字符串转换为ByteArrayInputStream
+        byte[] byteArray=Base64.decode(imageString, Base64.DEFAULT);
+        ByteArrayInputStream byteArrayInputStream=new ByteArrayInputStream(byteArray);
+        //第三步:利用ByteArrayInputStream生成Bitmap
+        Bitmap bitmap=BitmapFactory.decodeStream(byteArrayInputStream);
+        return bitmap;
     }
 
 }
